@@ -555,7 +555,9 @@ function copyClinic(){
 }
 
 function exportFile(){
-  const blob=new Blob([JSON.stringify({bp,body,v:1,exported:new Date().toISOString()},null,1)],
+  const blob=new Blob([JSON.stringify({bp,body,
+    settings:{height:HEIGHT_CM,txLabel:TX_LABEL,txDate:TX_DATE},
+    v:1,exported:new Date().toISOString()},null,1)],
     {type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
