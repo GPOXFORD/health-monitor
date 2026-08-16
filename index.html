@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Monitoring">
+<meta name="theme-color" content="#0E1116">
+<title>Home Monitoring</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBFMTExNiIvPjxwYXRoIGQ9Ik0xOCA5MGgyNGwxMC0zMCAxNCA2MCAxMi00MCAxMCAxMGgzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2QjRBIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0E1116}
+body{
+  --bg:#0E1116;--panel:#151A21;--line:#232B35;--sys:#FF6B4A;--dia:#4FD1E0;
+  --gold:#E8C46A;--violet:#B08CE0;--green:#6FCF97;--ink:#E6EAF0;--mute:#7D8694;
+  color:var(--ink);
+  font-family:ui-monospace,'SF Mono',Menlo,monospace;
+  font-size:13px;font-variant-numeric:tabular-nums;
+  padding:max(16px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+  -webkit-text-size-adjust:100%;
+}
+.cond{font-family:'Avenir Next Condensed','Helvetica Neue Condensed',
+  'Roboto Condensed',system-ui,sans-serif}
+.eyebrow{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.16em;color:var(--mute);font-size:12px;font-weight:600}
+h1{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.05em;font-size:27px;font-weight:600;
+  margin:2px 0 12px;line-height:1}
+h1 span{color:var(--sys)}
+.savechip{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.14em;font-size:11px;padding:5px 9px;
+  margin-bottom:12px;display:inline-block;border:1px solid var(--line);color:var(--mute)}
+.savechip.saved{color:var(--green);border-color:rgba(111,207,151,.4)}
+.savechip.error{color:#0E1116;background:var(--sys);border-color:var(--sys);font-weight:700}
+.tabs{display:flex;margin-bottom:14px;border:1px solid var(--line)}
+.tabs button{flex:1;background:none;border:none;border-right:1px solid var(--line);
+  color:var(--mute);padding:12px 6px;font-family:'Avenir Next Condensed','Roboto Condensed',
+  system-ui,sans-serif;text-transform:uppercase;letter-spacing:.13em;font-size:14px;
+  font-weight:600;cursor:pointer}
+.tabs button:last-child{border-right:none}
+.tabs button.on{background:var(--sys);color:#0E1116}
+.card{background:var(--panel);border:1px solid var(--line);padding:14px;margin-bottom:14px}
+svg.trace{width:100%;height:auto;display:block}
+.tick{font-family:ui-monospace,monospace;font-size:9px;fill:var(--mute);letter-spacing:.04em}
+.legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:2px;margin-right:6px;vertical-align:middle}
+.legend span{font-size:11px;color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-bottom:14px}
+.stat{background:var(--panel);padding:11px 12px}
+.stat-label{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--mute);margin-bottom:5px}
+.stat-val{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.unit{font-size:11px;color:var(--mute);margin-left:4px;font-weight:400}
+.sys{color:var(--sys)}.dia{color:var(--dia)}
+.slash{color:var(--mute);margin:0 2px;font-weight:400}
+.none{font-size:14px;color:var(--mute);font-weight:400}
+.stat-sub{font-size:10.5px;color:var(--mute);margin-top:4px}
+.form{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f.wide{grid-column:span 3}.f.half{grid-column:span 2}
+label{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--mute);font-weight:600}
+input,textarea{background:#0B0E13;border:1px solid var(--line);color:var(--ink);
+  padding:10px 9px;font-family:ui-monospace,monospace;font-size:16px;border-radius:0;
+  width:100%;-webkit-appearance:none}
+textarea{font-size:11px;resize:vertical;margin-top:9px}
+input:focus,textarea:focus{outline:2px solid var(--sys);outline-offset:1px;border-color:transparent}
+.row2{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}
+button.go,button.ghost{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.13em;font-size:14px;font-weight:600;cursor:pointer;
+  padding:11px 18px;border-radius:0}
+button.go{border:1px solid var(--sys);background:var(--sys);color:#0E1116}
+button.ghost{background:none;color:var(--mute);border:1px solid var(--line)}
+button:disabled{opacity:.35}
+.chk{display:flex;align-items:center;gap:7px;color:var(--mute);font-size:12px}
+.chk input{width:20px;height:20px;accent-color:var(--sys);padding:0}
+.status{color:var(--gold);font-size:11.5px;min-height:15px;margin-top:9px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-family:'Avenir Next Condensed','Roboto Condensed',system-ui,sans-serif;
+  text-transform:uppercase;letter-spacing:.11em;font-size:11px;color:var(--mute);
+  text-align:left;padding:6px 5px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:8px 5px;border-bottom:1px solid rgba(35,43,53,.55)}
+tr.out td{opacity:.4}
+.n{color:var(--mute);font-size:11px}
+.act{background:none;border:none;color:var(--mute);font-size:11px;padding:4px 5px;
+  letter-spacing:.06em;cursor:pointer;font-family:inherit}
+.scroll{max-height:340px;overflow:auto;-webkit-overflow-scrolling:touch}
+.foot{color:var(--mute);font-size:10.5px;line-height:1.65}
+@media(max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .form{grid-template-columns:repeat(2,1fr)}
+  .f.wide,.f.half{grid-column:span 2}
+  h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+
+<div class="eyebrow">GP Health · Cardiovascular</div>
+<h1>Home <span>monitoring</span></h1>
+<div class="savechip" id="chip">ready</div>
+
+<div class="tabs">
+  <button id="tabBP" class="on" onclick="setTab('bp')">Blood pressure</button>
+  <button id="tabBody" onclick="setTab('body')">Weight &amp; waist</button>
+  <button id="tabSet" onclick="setTab('set')">Setup</button>
+</div>
+
+<div id="view"></div>
+
+<script>
+/* ================= constants ================= */
+let HEIGHT_CM = 170;      /* set in Settings */
+let TX_LABEL = "";        /* treatment marker label, e.g. a drug name */
+let TX_DATE  = "";        /* yyyy-mm-dd */
+let DRUG_START = null;
+const TARGET_S = 135, TARGET_D = 85;
+const WHTR_OK = 0.5, WHTR_HIGH = 0.6;
+const KEY = "gp-home-monitoring-v1";
+
+const SEED_BP = [];
+
+const SEED_BODY = [];
+
+/* ================= state ================= */
+let tab = "bp";
+let bp = [], body = [], status = "";
+
+function uid(){return Math.random().toString(36).slice(2,10)}
+const ts = r => new Date(r.d+"T"+(r.t||"12:00")+":00").getTime();
+const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+const r0 = v => (v==null||isNaN(v)) ? "—" : Math.round(v);
+const r1 = v => (v==null||isNaN(v)) ? "—" : v.toFixed(1);
+const whtr = w => w ? w/HEIGHT_CM : null;
+const fmtDay = ms => new Date(ms).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const EXERCISE = /post[- ]?(ride|run|exercise|workout|gym)|km run/i;
+
+/* ================= storage — device local ================= */
+function chip(state,msg){
+  const el=document.getElementById("chip");
+  el.className="savechip"+(state?" "+state:"");
+  el.textContent=msg;
+}
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify({bp,body,settings:{height:HEIGHT_CM,txLabel:TX_LABEL,txDate:TX_DATE},v:1}));
+    chip("saved","saved to this device");
+  }catch(e){
+    chip("error","NOT SAVED — "+(e.message||e));
+  }
+}
+function applySettings(st){
+  if(!st) return;
+  if(st.height) HEIGHT_CM = Number(st.height)||HEIGHT_CM;
+  TX_LABEL = st.txLabel||"";
+  TX_DATE  = st.txDate||"";
+  DRUG_START = TX_DATE ? new Date(TX_DATE+"T22:00:00").getTime() : null;
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw){ bp=SEED_BP; body=SEED_BODY; save(); return; }
+    const o = JSON.parse(raw);
+    bp = (o.bp||[]).map(r=>({...r,id:r.id||uid(),
+      x: r.x===true || (r.x==null && EXERCISE.test(r.n||""))}));
+    body = (o.body||[]).map(r=>({...r,id:r.id||uid()}));
+    applySettings(o.settings);
+    chip("saved","loaded from this device");
+  }catch(e){
+    bp=SEED_BP; body=SEED_BODY;
+    chip("error","could not read saved data — seeded");
+  }
+}
+
+/* ================= derived ================= */
+function collapse(rows){
+  const s=[...rows].sort((a,b)=>ts(a)-ts(b)), out=[]; let b=[];
+  const flush=()=>{ if(!b.length)return;
+    out.push({...b[0], s:mean(b.map(r=>r.s)), p:mean(b.map(r=>r.p)),
+      h:mean(b.filter(r=>r.h!=null).map(r=>r.h))}); b=[]; };
+  for(const r of s){
+    if(!b.length || ts(r)-ts(b[b.length-1])<=6e5) b.push(r); else {flush(); b=[r];}
+  }
+  flush(); return out;
+}
+function stat(rows){
+  if(!rows.length) return {n:0,s:null,p:null,h:null};
+  return {n:rows.length, s:mean(rows.map(r=>r.s)), p:mean(rows.map(r=>r.p)),
+    h:mean(rows.filter(r=>r.h!=null&&!isNaN(r.h)).map(r=>r.h))};
+}
+function segs(pts,gapDays){
+  const out=[]; let cur=[];
+  pts.forEach((r,i)=>{
+    if(i>0 && ts(r)-ts(pts[i-1])>gapDays*864e5){ if(cur.length)out.push(cur); cur=[]; }
+    cur.push(r);
+  });
+  if(cur.length)out.push(cur); return out;
+}
+
+/* ================= charts ================= */
+function bpTrace(pts){
+  const W=760,H=330,M={l:40,r:14,t:14,b:40};
+  const iw=W-M.l-M.r, ih=H-M.t-M.b, yMin=60,yMax=160;
+  const y=v=>M.t+ih-((v-yMin)/(yMax-yMin))*ih;
+  if(!pts.length) return `<svg class="trace" viewBox="0 0 ${W} ${H}"></svg>`;
+  const t0=ts(pts[0]), t1=ts(pts[pts.length-1]);
+  const span=Math.max(t1-t0,864e5), pad=span*0.04;
+  const x=ms=>M.l+((ms-(t0-pad))/(span+pad*2))*iw;
+  const S=segs(pts,2);
+  const line=(seg,k,c)=>`<polyline points="${seg.map(r=>x(ts(r))+","+y(r[k])).join(" ")}"
+    fill="none" stroke="${c}" stroke-width="1.9" stroke-linejoin="round"/>`;
+  let xt=""; for(let ms=t0;ms<=t1+864e5;ms+=2*864e5)
+    xt+=`<text x="${x(ms)}" y="${H-22}" text-anchor="middle" class="tick">${fmtDay(ms)}</text>`;
+  return `<svg class="trace" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <pattern id="mm" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M10 0H0V10" fill="none" stroke="rgba(255,122,89,.13)" stroke-width="1"/></pattern>
+    <pattern id="mm5" width="50" height="50" patternUnits="userSpaceOnUse">
+      <rect width="50" height="50" fill="url(#mm)"/>
+      <path d="M50 0H0V50" fill="none" stroke="rgba(255,122,89,.30)" stroke-width="1.3"/></pattern>
+  </defs>
+  <rect x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="url(#mm5)"/>
+  <rect x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="none" stroke="rgba(255,122,89,.35)"/>
+  ${[[TARGET_S,"#FF6B4A","135"],[TARGET_D,"#4FD1E0","85"]].map(([v,c,l])=>`
+    <line x1="${M.l}" x2="${W-M.r}" y1="${y(v)}" y2="${y(v)}" stroke="${c}"
+      stroke-width="1" stroke-dasharray="2 5" opacity=".55"/>
+    <text x="${W-M.r-3}" y="${y(v)-5}" text-anchor="end" class="tick" fill="${c}"
+      opacity=".8">${l} target</text>`).join("")}
+  ${(DRUG_START&&DRUG_START>t0-pad&&DRUG_START<t1+pad)?`
+    <line x1="${x(DRUG_START)}" x2="${x(DRUG_START)}" y1="${M.t}" y2="${M.t+ih}"
+      stroke="#E8C46A" stroke-width="1.4"/>
+    <text x="${x(DRUG_START)+5}" y="${M.t+13}" class="tick" fill="#E8C46A">${esc(TX_LABEL.toUpperCase())}</text>`:""}
+  ${[60,80,100,120,140,160].map(v=>`<text x="${M.l-7}" y="${y(v)+3.5}"
+    text-anchor="end" class="tick">${v}</text>`).join("")}
+  ${xt}
+  ${S.map(seg=>line(seg,"s","#FF6B4A")+line(seg,"p","#4FD1E0")).join("")}
+  ${pts.map(r=>`<circle cx="${x(ts(r))}" cy="${y(r.s)}" r="3.1" fill="#FF6B4A"/>
+    <circle cx="${x(ts(r))}" cy="${y(r.p)}" r="3.1" fill="#4FD1E0"/>`).join("")}
+  ${S.length>1?`<text x="${M.l+iw/2}" y="${H-5}" text-anchor="middle" class="tick"
+    fill="#7D8694">trace broken where no readings were recorded</text>`:""}
+  </svg>`;
+}
+
+function bodyTrace(rows){
+  const W=760,H=300,M={l:40,r:42,t:14,b:40};
+  const iw=W-M.l-M.r, ih=H-M.t-M.b;
+  if(!rows.length) return `<svg class="trace" viewBox="0 0 ${W} ${H}"></svg>`;
+  const kgs=rows.filter(r=>r.kg!=null).map(r=>r.kg);
+  const lo=kgs.length?Math.floor(Math.min(...kgs)-3):90;
+  const hi=kgs.length?Math.ceil(Math.max(...kgs)+3):105;
+  const y=v=>M.t+ih-((v-lo)/((hi-lo)||1))*ih;
+  const ws=rows.filter(r=>r.w!=null).map(r=>r.w);
+  const wlo=ws.length?Math.floor(Math.min(...ws)-4):80;
+  const whi=ws.length?Math.ceil(Math.max(...ws)+4):115;
+  const yw=v=>M.t+ih-((v-wlo)/((whi-wlo)||1))*ih;
+  const t0=ts(rows[0]), t1=ts(rows[rows.length-1]);
+  const span=Math.max(t1-t0,7*864e5), pad=span*0.05;
+  const x=ms=>M.l+((ms-(t0-pad))/(span+pad*2))*iw;
+  const kgPts=rows.filter(r=>r.kg!=null), wPts=rows.filter(r=>r.w!=null);
+  let yt=""; const stepY=Math.max(1,Math.round((hi-lo)/5));
+  for(let v=lo;v<=hi;v+=stepY) yt+=`<text x="${M.l-7}" y="${y(v)+3.5}" text-anchor="end" class="tick">${v}</text>`;
+  let xt=""; const stepX=Math.max(864e5,Math.round(span/6/864e5)*864e5);
+  for(let ms=t0;ms<=t1+1;ms+=stepX) xt+=`<text x="${x(ms)}" y="${H-22}" text-anchor="middle" class="tick">${fmtDay(ms)}</text>`;
+  const poly=(pts,fy,k,c,dash)=>pts.length<2?"":`<polyline points="${pts.map(r=>x(ts(r))+","+fy(r[k])).join(" ")}"
+    fill="none" stroke="${c}" stroke-width="1.9" ${dash?'stroke-dasharray="5 3"':""}/>`;
+  return `<svg class="trace" viewBox="0 0 ${W} ${H}">
+  <rect x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="url(#mm5)"/>
+  <rect x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="none" stroke="rgba(255,122,89,.35)"/>
+  ${wPts.length?[[WHTR_HIGH*HEIGHT_CM,"#FF6B4A","0.60"],[WHTR_OK*HEIGHT_CM,"#6FCF97","0.50"]]
+    .filter(([v])=>v>wlo&&v<whi).map(([v,c,l])=>`
+    <line x1="${M.l}" x2="${W-M.r}" y1="${yw(v)}" y2="${yw(v)}" stroke="${c}"
+      stroke-width="1" stroke-dasharray="2 5" opacity=".5"/>
+    <text x="${M.l+4}" y="${yw(v)-5}" class="tick" fill="${c}" opacity=".85">WHtR ${l}</text>`).join(""):""}
+  ${wPts.length?[wlo,Math.round((wlo+whi)/2),whi].map(v=>`<text x="${W-M.r+6}"
+    y="${yw(v)+3.5}" class="tick" fill="#B08CE0">${v}</text>`).join(""):""}
+  ${yt}${xt}
+  ${poly(kgPts,y,"kg","#E8C46A",false)}
+  ${poly(wPts,yw,"w","#B08CE0",true)}
+  ${kgPts.map(r=>`<circle cx="${x(ts(r))}" cy="${y(r.kg)}" r="3.4" fill="#E8C46A"/>`).join("")}
+  ${wPts.map(r=>`<circle cx="${x(ts(r))}" cy="${yw(r.w)}" r="3.4" fill="#B08CE0"/>`).join("")}
+  <text x="${M.l+iw/2}" y="${H-5}" text-anchor="middle" class="tick" fill="#7D8694">
+    ${wPts.length?"left axis kg · right axis waist cm":"no waist measurements recorded"}</text>
+  </svg>`;
+}
+
+/* ================= render ================= */
+function statCard(label,d,note){
+  return `<div class="stat"><div class="stat-label">${label}</div>
+  <div class="stat-val">${d.n?`<span class="sys">${r0(d.s)}</span><span class="slash">/</span><span class="dia">${r0(d.p)}</span>`
+    :`<span class="none">no data</span>`}</div>
+  <div class="stat-sub">${d.n?`n=${d.n}`+(d.h?` · HR ${r0(d.h)}`:""):(note||"—")}</div></div>`;
+}
+function metric(label,val,unit,sub,tone){
+  return `<div class="stat"><div class="stat-label">${label}</div>
+  <div class="stat-val">${val==="—"?`<span class="none">no data</span>`
+    :`<span style="color:${tone||"#E6EAF0"}">${val}</span><span class="unit">${unit}</span>`}</div>
+  <div class="stat-sub">${sub}</div></div>`;
+}
+
+function render(){
+  document.getElementById("tabBP").className = tab==="bp"?"on":"";
+  document.getElementById("tabBody").className = tab==="body"?"on":"";
+  document.getElementById("tabSet").className = tab==="set"?"on":"";
+  const inc=bp.filter(r=>!r.x), col=collapse(inc);
+  const now=new Date();
+  const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const hhmm=d=>String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+
+  if(tab==="bp"){
+    const all=stat(col), pre=stat(DRUG_START?col.filter(r=>ts(r)<DRUG_START):[]),
+      post=stat(DRUG_START?col.filter(r=>ts(r)>=DRUG_START):[]),
+      am=stat(col.filter(r=>+r.t.slice(0,2)<12)),
+      pm=stat(col.filter(r=>+r.t.slice(0,2)>=12&&+r.t.slice(0,2)<18)),
+      ev=stat(col.filter(r=>+r.t.slice(0,2)>=18));
+    const sorted=[...bp].sort((a,b)=>ts(b)-ts(a));
+    document.getElementById("view").innerHTML=`
+    <div class="card">${bpTrace(col)}
+      <div class="legend">
+        <span><i style="background:#FF6B4A"></i>Systolic</span>
+        <span><i style="background:#4FD1E0"></i>Diastolic</span>
+        ${TX_LABEL?`<span><i style="background:#E8C46A"></i>${esc(TX_LABEL)} start</span>`:""}
+        <span>Post-exercise excluded · pairs averaged</span></div></div>
+    <div class="stats">
+      ${statCard("All readings",all)}${statCard("Before "+(TX_LABEL||"treatment"),pre,"no start date set")}
+      ${statCard("On "+(TX_LABEL||"treatment"),post,"no start date set")}${statCard("Morning",am,"before 12:00")}
+      ${statCard("Afternoon",pm,"12:00–18:00")}${statCard("Evening",ev,"after 18:00")}</div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">Add a reading</div>
+      <div class="form">
+        <div class="f wide"><label for="bd">Date</label><input id="bd" type="date" value="${iso(now)}"></div>
+        <div class="f wide"><label for="bt">Time</label><input id="bt" type="time" value="${hhmm(now)}"></div>
+        <div class="f"><label for="bs">Systolic</label><input id="bs" type="number" inputmode="numeric"></div>
+        <div class="f"><label for="bpd">Diastolic</label><input id="bpd" type="number" inputmode="numeric"></div>
+        <div class="f"><label for="bh">Pulse</label><input id="bh" type="number" inputmode="numeric"></div>
+        <div class="f wide"><label for="bn">Note</label><input id="bn" placeholder="1st of pair, post-ride…"></div>
+      </div>
+      <div class="row2">
+        <button class="go" onclick="addBP()">Add reading</button>
+        <label class="chk"><input type="checkbox" id="bx"> Exclude from averages</label>
+      </div>
+      <div class="row2">
+        <button class="ghost" onclick="copyRaw()">Copy raw</button>
+        <button class="ghost" onclick="copyClinic()">Clinic summary</button>
+      </div>
+      <div class="status">${esc(status)}</div></div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">${bp.length} readings · ${bp.length-inc.length} excluded</div>
+      <div class="scroll"><table><thead><tr><th>Date</th><th>Time</th><th>Sys</th>
+        <th>Dia</th><th>HR</th><th>Note</th><th></th></tr></thead><tbody>
+        ${sorted.map(r=>`<tr class="${r.x?"out":""}">
+          <td>${fmtDay(ts(r))}</td><td>${r.t}</td><td class="sys">${r.s}</td>
+          <td class="dia">${r.p}</td><td class="n">${r.h??"—"}</td><td class="n">${esc(r.n)}</td>
+          <td style="white-space:nowrap">
+            <button class="act" onclick="toggle('${r.id}')">${r.x?"include":"exclude"}</button>
+            <button class="act" onclick="delBP('${r.id}')">delete</button></td></tr>`).join("")}
+      </tbody></table></div></div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">Backup</div>
+      <div class="foot">Data lives in this device's browser storage. Export a file to
+      the Files app now and again so a phone reset or a cleared cache can't lose it.</div>
+      <div class="row2"><button class="ghost" onclick="exportFile()">Export file</button>
+        <label class="ghost" style="cursor:pointer;padding:11px 18px;
+          font-family:'Avenir Next Condensed',system-ui,sans-serif;text-transform:uppercase;
+          letter-spacing:.13em;font-size:14px;font-weight:600">Import file
+          <input type="file" accept=".json,application/json" onchange="importFile(event)"
+            style="display:none"></label></div></div>
+    <div class="foot">Targets shown are home-average thresholds (135/85). Readings within
+      ten minutes are averaged into one point. The trace breaks across days with no
+      readings rather than interpolating. Records state only — it carries no clinical advice.</div>`;
+  } else if(tab==="body"){
+    const asc=[...body].sort((a,b)=>ts(a)-ts(b));
+    const desc=[...body].sort((a,b)=>ts(b)-ts(a));
+    const lastKg=[...asc].reverse().find(r=>r.kg!=null), firstKg=asc.find(r=>r.kg!=null);
+    const lastW=[...asc].reverse().find(r=>r.w!=null), firstW=asc.find(r=>r.w!=null);
+    const kgD=(lastKg&&firstKg&&lastKg.id!==firstKg.id)?lastKg.kg-firstKg.kg:null;
+    const wD=(lastW&&firstW&&lastW.id!==firstW.id)?lastW.w-firstW.w:null;
+    const cw=lastW?whtr(lastW.w):null;
+    const band=cw==null?"":cw>=WHTR_HIGH?"high risk":cw>=WHTR_OK?"increased risk":"healthy";
+    const to6=lastW?lastW.w-WHTR_HIGH*HEIGHT_CM:null, to5=lastW?lastW.w-WHTR_OK*HEIGHT_CM:null;
+    document.getElementById("view").innerHTML=`
+    <div class="card">${bodyTrace(asc)}
+      <div class="legend"><span><i style="background:#E8C46A"></i>Weight kg</span>
+        <span><i style="background:#B08CE0"></i>Waist cm</span>
+        <span>Waist on the right-hand scale</span></div></div>
+    <div class="stats">
+      ${metric("Weight",lastKg?r1(lastKg.kg):"—","kg",
+        lastKg?fmtDay(ts(lastKg))+(kgD!=null?` · ${kgD>0?"+":""}${r1(kgD)} kg overall`:""):"not recorded","#E8C46A")}
+      ${metric("Waist",lastW?r1(lastW.w):"—","cm",
+        lastW?fmtDay(ts(lastW))+(wD!=null?` · ${wD>0?"+":""}${r1(wD)} cm overall`:""):"not recorded","#B08CE0")}
+      ${metric("WHtR",cw?cw.toFixed(2):"—","",cw?`${band} · height ${HEIGHT_CM}cm`:"needs a waist measurement",
+        cw==null?null:cw>=WHTR_HIGH?"#FF6B4A":cw>=WHTR_OK?"#E8C46A":"#6FCF97")}
+      ${metric("To WHtR 0.60",to6!=null?(to6>0?r1(to6):"reached"):"—",to6>0?"cm":"","upper risk threshold")}
+      ${metric("To WHtR 0.50",to5!=null?(to5>0?r1(to5):"reached"):"—",to5>0?"cm":"","healthy threshold")}
+      ${metric("Entries",body.length?String(body.length):"—","","weight and waist records")}</div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">Add a measurement</div>
+      <div class="form">
+        <div class="f wide"><label for="wd">Date</label><input id="wd" type="date" value="${iso(now)}"></div>
+        <div class="f half"><label for="wk">Weight kg</label><input id="wk" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="f"><label for="ww">Waist cm</label><input id="ww" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="f wide"><label for="wn">Note</label><input id="wn" placeholder="fasted, morning…"></div>
+      </div>
+      <div class="row2"><button class="go" onclick="addBody()">Add measurement</button>
+        <button class="ghost" onclick="copyClinic()">Clinic summary</button></div>
+      <div class="status">${esc(status)}</div></div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">${body.length} entries</div>
+      <div class="scroll"><table><thead><tr><th>Date</th><th>Weight</th><th>Waist</th>
+        <th>WHtR</th><th>Note</th><th></th></tr></thead><tbody>
+        ${desc.map(r=>`<tr><td>${fmtDay(ts(r))}</td>
+          <td style="color:#E8C46A">${r.kg!=null?r1(r.kg):"—"}</td>
+          <td style="color:#B08CE0">${r.w!=null?r1(r.w):"—"}</td>
+          <td class="n">${r.w!=null?whtr(r.w).toFixed(2):"—"}</td>
+          <td class="n">${esc(r.n)}</td>
+          <td><button class="act" onclick="delBody('${r.id}')">delete</button></td></tr>`).join("")}
+      </tbody></table></div></div>
+    <div class="foot">WHtR is waist divided by height, fixed at ${HEIGHT_CM}cm. Thresholds are
+      0.50 (healthy) and 0.60 (high risk). Measure at the midpoint between the lowest rib and
+      the top of the hip bone, at the end of a normal breath out, same time of day each time.
+      Weight moves on hydration and glycogen; waist is the steadier signal.</div>`;
+  } else {
+    document.getElementById("view").innerHTML=`
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">Your details</div>
+      <div class="foot" style="margin-bottom:11px">Held on this device only. Height is
+        needed for the waist-to-height ratio. The treatment marker draws a line on the
+        blood pressure chart and splits the averages either side of it — leave it blank
+        if you don't want one.</div>
+      <div class="form">
+        <div class="f half"><label for="sh">Height cm</label>
+          <input id="sh" type="number" step="0.5" inputmode="decimal" value="${HEIGHT_CM||""}"></div>
+        <div class="f wide"><label for="stl">Treatment marker</label>
+          <input id="stl" value="${esc(TX_LABEL)}" placeholder="e.g. a medication name"></div>
+        <div class="f wide"><label for="std">Started on</label>
+          <input id="std" type="date" value="${esc(TX_DATE)}"></div>
+      </div>
+      <div class="row2"><button class="go" onclick="saveSettings()">Save details</button></div>
+      <div class="status">${esc(status)}</div></div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">Data</div>
+      <div class="foot">Everything you enter stays in this device's browser storage and is
+        never sent anywhere. Export a file to Files now and again so a phone reset or a
+        cleared cache can't lose it.</div>
+      <div class="row2">
+        <button class="ghost" onclick="exportFile()">Export file</button>
+        <label class="ghost" style="cursor:pointer;padding:11px 18px;
+          font-family:'Avenir Next Condensed',system-ui,sans-serif;text-transform:uppercase;
+          letter-spacing:.13em;font-size:14px;font-weight:600">Import file
+          <input type="file" accept=".json,application/json" onchange="importFile(event)"
+            style="display:none"></label>
+      </div>
+      <div class="row2">
+        <button class="ghost" onclick="wipe()">Erase everything</button>
+      </div></div>
+    <div class="foot">${bp.length} readings · ${body.length} measurements stored.</div>`;
+  }
+}
+
+function saveSettings(){
+  const g=id=>document.getElementById(id).value;
+  const h=parseFloat(g("sh"));
+  if(!h||h<100||h>250){ status="Enter a height in centimetres."; return render(); }
+  HEIGHT_CM=h; TX_LABEL=g("stl").trim(); TX_DATE=g("std");
+  DRUG_START = TX_DATE ? new Date(TX_DATE+"T22:00:00").getTime() : null;
+  save(); status="Details saved."; render();
+}
+
+function wipe(){
+  if(!confirm("Erase all readings and measurements from this device? Export a backup first if you want to keep them.")) return;
+  bp=[]; body=[]; save(); status="All data erased."; render();
+}
+
+/* ================= actions ================= */
+function setTab(t){ tab=t; status=""; render(); }
+
+function addBP(){
+  const g=id=>document.getElementById(id).value;
+  const s=parseInt(g("bs"),10), p=parseInt(g("bpd"),10);
+  if(!s||!p){ status="Enter both systolic and diastolic."; return render(); }
+  if(s<60||s>260||p<30||p>160){ status="Reading is outside a plausible range — check the display."; return render(); }
+  bp.push({id:uid(),d:g("bd"),t:g("bt"),s,p,
+    h:g("bh")?parseInt(g("bh"),10):null, n:g("bn").trim(),
+    x:document.getElementById("bx").checked});
+  save(); status="Reading added."; render();
+}
+function addBody(){
+  const g=id=>document.getElementById(id).value;
+  const kg=g("wk")?parseFloat(g("wk")):null, w=g("ww")?parseFloat(g("ww")):null;
+  if(kg==null&&w==null){ status="Enter a weight, a waist, or both."; return render(); }
+  if(kg!=null&&(kg<30||kg>250)){ status="Weight is outside a plausible range."; return render(); }
+  if(w!=null&&(w<50||w>200)){ status="Waist is outside a plausible range."; return render(); }
+  body.push({id:uid(),d:g("wd"),kg,w,n:g("wn").trim()});
+  save(); status="Measurement added."; render();
+}
+function toggle(id){ bp=bp.map(r=>r.id===id?{...r,x:!r.x}:r); save(); render(); }
+function delBP(id){ bp=bp.filter(r=>r.id!==id); save(); render(); }
+function delBody(id){ body=body.filter(r=>r.id!==id); save(); render(); }
+
+function clip(txt,msg){
+  const done=()=>{status=msg; render();};
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(done,()=>fallback());
+  } else fallback();
+  function fallback(){
+    const ta=document.createElement("textarea");
+    ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{document.execCommand("copy"); done();}catch(e){status="Copy failed.";render();}
+    document.body.removeChild(ta);
+  }
+}
+function copyRaw(){
+  clip([...bp].sort((a,b)=>ts(a)-ts(b))
+    .map(r=>`${r.d}|${r.t}|${r.s}|${r.p}|${r.h??""}|${r.n}`).join("\n"),
+    `Copied ${bp.length} readings.`);
+}
+function copyClinic(){
+  const col=collapse(bp.filter(r=>!r.x));
+  const all=stat(col), pre=stat(DRUG_START?col.filter(r=>ts(r)<DRUG_START):[]),
+    post=stat(DRUG_START?col.filter(r=>ts(r)>=DRUG_START):[]),
+    am=stat(col.filter(r=>+r.t.slice(0,2)<12)),
+    pm=stat(col.filter(r=>+r.t.slice(0,2)>=12&&+r.t.slice(0,2)<18)),
+    ev=stat(col.filter(r=>+r.t.slice(0,2)>=18));
+  const asc=[...body].sort((a,b)=>ts(a)-ts(b));
+  const lastKg=[...asc].reverse().find(r=>r.kg!=null), firstKg=asc.find(r=>r.kg!=null);
+  const lastW=[...asc].reverse().find(r=>r.w!=null), firstW=asc.find(r=>r.w!=null);
+  const L=["HOME MONITORING SUMMARY"];
+  L.push("Period: "+(col.length?`${fmtDay(ts(col[0]))} – ${fmtDay(ts(col[col.length-1]))}`:"no readings"));
+  L.push("","BLOOD PRESSURE (home, post-exercise excluded, pairs averaged)");
+  L.push(`  Overall            ${r0(all.s)}/${r0(all.p)}   n=${all.n}`);
+  if(DRUG_START){
+    L.push(`  Before ${TX_LABEL||"treatment"}`.padEnd(21)+`${r0(pre.s)}/${r0(pre.p)}   n=${pre.n}`);
+    L.push(`  On ${TX_LABEL||"treatment"}`.padEnd(21)+`${r0(post.s)}/${r0(post.p)}   n=${post.n}`);
+  }
+  L.push(`  Morning <12:00     ${r0(am.s)}/${r0(am.p)}   n=${am.n}`);
+  L.push(`  Afternoon 12–18    ${r0(pm.s)}/${r0(pm.p)}   n=${pm.n}`);
+  L.push(`  Evening >18:00     ${r0(ev.s)}/${r0(ev.p)}   n=${ev.n}`);
+  L.push(`  Resting pulse      ${r0(all.h)} bpm mean`);
+  L.push("","BODY");
+  if(lastKg) L.push(`  Weight             ${r1(lastKg.kg)} kg (${fmtDay(ts(lastKg))})`+
+    (lastKg!==firstKg?`, ${lastKg.kg-firstKg.kg>0?"+":""}${r1(lastKg.kg-firstKg.kg)} kg since ${fmtDay(ts(firstKg))}`:""));
+  if(lastW){
+    L.push(`  Waist              ${r1(lastW.w)} cm (${fmtDay(ts(lastW))})`+
+      (lastW!==firstW?`, ${lastW.w-firstW.w>0?"+":""}${r1(lastW.w-firstW.w)} cm since ${fmtDay(ts(firstW))}`:""));
+    L.push(`  WHtR               ${whtr(lastW.w).toFixed(2)} (height ${HEIGHT_CM}cm)`);
+  }
+  if(DRUG_START) L.push("",`${TX_LABEL} commenced ${new Date(DRUG_START).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}.`);
+  L.push("Readings seated. Self-recorded — not clinic-validated.");
+  clip(L.join("\n"),"Clinic summary copied.");
+}
+
+function exportFile(){
+  const blob=new Blob([JSON.stringify({bp,body,v:1,exported:new Date().toISOString()},null,1)],
+    {type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="home-monitoring-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  status="Exported — choose Save to Files."; render();
+}
+function importFile(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const o=JSON.parse(fr.result);
+      const nb=(o.bp||[]).map(r=>({...r,id:r.id||uid(),
+        x:r.x===true||(r.x==null&&EXERCISE.test(r.n||""))}));
+      const nd=(o.body||[]).map(r=>({...r,id:r.id||uid()}));
+      if(!nb.length&&!nd.length) throw new Error("nothing to import");
+      bp=nb; body=nd; save();
+      status=`Imported ${nb.length} readings and ${nd.length} measurements.`;
+    }catch(e){ status="Import failed: "+e.message; }
+    render();
+  };
+  fr.readAsText(f);
+  ev.target.value="";
+}
+
+/* ================= boot ================= */
+load();
+render();
+</script>
+</body>
+</html>
