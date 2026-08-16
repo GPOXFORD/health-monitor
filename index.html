@@ -574,7 +574,7 @@ function importFile(ev){
         x:r.x===true||(r.x==null&&EXERCISE.test(r.n||""))}));
       const nd=(o.body||[]).map(r=>({...r,id:r.id||uid()}));
       if(!nb.length&&!nd.length) throw new Error("nothing to import");
-      bp=nb; body=nd; save();
+      bp=nb; body=nd; applySettings(o.settings); save();
       status=`Imported ${nb.length} readings and ${nd.length} measurements.`;
     }catch(e){ status="Import failed: "+e.message; }
     render();
